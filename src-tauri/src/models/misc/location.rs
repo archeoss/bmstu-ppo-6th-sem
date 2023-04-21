@@ -12,8 +12,15 @@ pub struct Location {
 }
 
 impl Location {
-    pub async fn new(country: &str, region: &str, city: &str, timezone: DateTime<Utc>) -> Self {
+    pub async fn new(
+        id: Uuid,
+        country: &str,
+        region: &str,
+        city: &str,
+        timezone: DateTime<Utc>,
+    ) -> Self {
         Self {
+            id,
             country: country.to_string(),
             region: region.to_string(),
             city: city.to_string(),

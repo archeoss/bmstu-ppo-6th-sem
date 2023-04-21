@@ -18,8 +18,8 @@ mod logic {}
 
 /// Boilerplate
 impl<'a> Client<'a> {
-    getter_ref!( { async } id: &i64, { async } name: &str);
-    getter_mut!( { async } id: &mut i64, { async } name: &mut String);
-    setter!( { async } id: i64, { async } name: &str);
-    getter!( { async } id: i64);
+    getter_ref!( { async } id: &Uuid, { async } name: &str);
+    getter_mut!( { async } id: &mut Uuid, { async } name: &mut String);
+    setter!( { async } id: Uuid, { async } name: &str);
+    getter!( { async } id: Uuid);
 }
