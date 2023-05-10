@@ -11,6 +11,8 @@ mod repository;
 mod viewmodels;
 
 pub mod prelude {
+    pub use crate::errors::declaration::Err as DErr;
+    // pub use crate::errors::::Err as DErr;
     pub use super::macros::*;
     pub use chrono::serde::ts_seconds;
     pub use serde::{Deserialize, Serialize};

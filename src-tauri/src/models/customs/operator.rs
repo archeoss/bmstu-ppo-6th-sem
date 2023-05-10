@@ -10,7 +10,11 @@ pub struct Operator {
 }
 
 impl Operator {
-    pub async fn new(id: Uuid, name: &str, post: &str) -> Self {
+    pub async fn new(name: &str, post: &str) -> Self {
+        Self::load(Uuid::new_v4(), name, post).await
+    }
+
+    pub async fn load(id: Uuid, name: &str, post: &str) -> Self {
         Self {
             id,
             name: name.to_string(),
@@ -24,10 +28,15 @@ impl Operator {
 /// We do this in order to if we want to turn current Structs
 /// into DTO Structs (or just strip it out of said logic).
 ///
-/// Import Logic: use <path>::<struct>::logic::*;
+/// Import Logic: ``use <path>::<struct>::logic::*;``
 ///
 mod logic {
-    impl super::Operator {}
+    trait Logic {
+        // fn async change_params(&self,) {
+        // }
+    }
+
+    impl Logic for super::Operator {}
 }
 
 /// Boilerplate

@@ -2,7 +2,7 @@
   "build": {
     "beforeBuildCommand": "npm run build &amp;&amp; npm run export",
     "beforeDevCommand": "npm run dev",
-    "devPath": "http://localhost:3000",
+    "devPath": "http://localhost:8002",
     "distDir": "../out"
   },
   "package": {

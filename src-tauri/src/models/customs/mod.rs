@@ -1,59 +1,95 @@
-use std::sync::RwLock;
+use std::{collections::HashMap, sync::RwLock};
 
 use self::{inspector::Inspector, operator::Operator};
 
-use super::{declaration::Declaration, misc::location::Location};
+use super::{
+    declaration::{Declaration, DeclarationGeneric, Pending},
+    misc::location::Location,
+    processor::Processor,
+};
 use crate::prelude::*;
 use chrono::naive::NaiveTime;
 use tokio::sync::mpsc::Receiver;
 use uuid::Uuid;
 mod inspector;
 mod operator;
-
-// #[derive(Clone, PartialEq, PartialOrd, Debug)]
-#[derive(Default, Debug)]
-pub(super) struct Customs<'a> {
-    id: Uuid,
-    work_hours: (NaiveTime, NaiveTime),
-    name: String,
-    location: Option<&'a Location>,
-    competence: String,
-    phone_number: String,
-    email: String,
-    declarations: Vec<Declaration>,
-    processor_channel: Option<Receiver<Declaration>>,
-    inspectors: Vec<Inspector>,
-    operators: Vec<Operator>,
+#[derive(Debug, PartialEq, Clone)]
+enum Fee {
+    Percentage(f64),
+    Flat(f64),
+    ProgressiveFlat { border: Vec<f64>, fee: Vec<f64> },
 }
 
-impl<'a> Customs<'a> {
-    #![allow(clippy::unwrap_used)]
-    pub async fn new(id: Uuid, name: &str, location: &'a Location) -> Customs<'a> {
-        Self {
-            id,
-            work_hours: (
-                NaiveTime::from_hms_opt(9, 0, 0).unwrap(),
-                NaiveTime::from_hms_opt(20, 0, 0).unwrap(),
-            ),
-            name: name.to_string(),
-            location: Some(location),
-            competence: String::new(),
-            phone_number: String::new(),
-            email: String::new(),
-            declarations: Vec::default(),
-            processor_channel: None,
-            inspectors: Vec::default(),
-            operators: Vec::default(),
+impl Default for Fee {
+    fn default() -> Self {
+        Self::Flat(0.)
+    }
+}
+
+impl Fee {
+    pub async fn calculate_fee(&self, product_price: f64) -> f64 {
+        match self {
+            Self::Percentage(perc) => perc * product_price,
+            Self::Flat(flat_tax) => *flat_tax,
+            Self::ProgressiveFlat { border, fee } => {
+                let mut calc_fee = 0.0;
+                for (&border, &fee) in border.iter().zip(fee.iter()) {
+                    if product_price < border {
+                        calc_fee = fee;
+                    }
+                }
+
+                calc_fee
+            }
         }
     }
-    // getter_mut!( { async } name: &mut String, { async } post: &mut String);
-    // setter!( { async } name: &str, { async } post: &str);
 }
 
-pub trait Logic {
-    async fn update_decl(&mut self, decl: Declaration) -> Result<(), Box<dyn Error>>;
-    async fn get_declaration(&self, id: Uuid) -> Option<&Declaration>;
-    async fn receive_docs(&mut self) -> Result<(), Box<dyn Error>>;
+#[derive(Default, Debug, PartialEq, Clone)]
+pub struct CustomsParams {
+    fee: Fee,
+    banned_import_products: Vec<String>,
+    banned_export_products: Vec<String>,
+    banned_import_origin: Vec<String>,
+    banned_export_origin: Vec<String>,
+}
+
+// #[derive(Clone, PartialEq, PartialOrd, Debug)]
+#[derive(Default, Debug, PartialEq, Clone)]
+pub struct Customs {
+    id: Uuid,
+    work_hours: Option<(NaiveTime, NaiveTime)>,
+    name: Option<String>,
+    location: Option<Location>,
+    competence: Option<String>,
+    phone_number: Option<String>,
+    email: Option<String>,
+    declarations: HashMap<Uuid, Declaration<Pending>>,
+    inspectors: HashMap<Uuid, Inspector>,
+    operators: HashMap<Uuid, Operator>,
+    customs_params: CustomsParams,
+}
+
+impl Customs {
+    #![allow(clippy::unwrap_used)]
+    /// Generate new customs with unique id
+    pub async fn new(name: &str, location: &Location) -> Customs {
+        Self::load(Uuid::new_v4(), name, location).await
+    }
+
+    /// Load customs (from database likely) with predefined UUID
+    pub async fn load(id: Uuid, name: &str, location: &Location) -> Customs {
+        Self {
+            id,
+            work_hours: Some((
+                NaiveTime::from_hms_opt(9, 0, 0).unwrap(),
+                NaiveTime::from_hms_opt(20, 0, 0).unwrap(),
+            )),
+            name: Some(name.to_string()),
+            location: Some(location.clone()),
+            ..Default::default()
+        }
+    }
 }
 
 ///
@@ -61,109 +97,103 @@ pub trait Logic {
 /// We do this in order to if we want to turn current Structs
 /// into DTO Structs (or just strip it out of said logic).
 ///
-/// Import Logic: use <path>::<struct>::logic::*;
+/// Import Logic: ``use <path>::<struct>::logic::*;``
 ///
-mod logic {
-    use super::Logic;
+pub mod logic {
     use crate::errors::declaration::Err as DErr;
-    use crate::{errors::channel::Err as ChErr, models::declaration::Declaration};
+    use crate::models::declaration::Declaration;
+    use crate::models::declaration::{DeclarationGeneric, Document, Pending};
     use futures::stream;
     use futures::StreamExt;
     use std::error::Error;
     use uuid::Uuid;
 
-    impl<'a> Logic for super::Customs<'a> {
-        async fn receive_docs(&mut self) -> Result<(), Box<dyn Error>> {
-            // We need to take option in order to make second mut borrow for *self
-            let mut ch = self.processor_channel.take();
-            let res = if let Some(ch) = &mut ch {
-                Ok(self
-                    .update_decl(ch.recv().await.ok_or(ChErr::ChannelWasClosed {
-                        customs_id: self.id,
-                    })?)
-                    .await?)
-            } else {
-                Err(Box::new(ChErr::NoOpenedChannel {
-                    customs_id: self.id,
-                }))
-            };
+    pub trait Logic {
+        /// Takes declaration copy, updates declarations, if there is any,
+        /// otherwise - add it to the pool
+        async fn update_decl(
+            &mut self,
+            decl: Declaration<Pending>,
+        ) -> Result<Option<Declaration<Pending>>, Box<dyn Error>>;
+        /// Gives declaration reference with provided UUID, if there is any
+        async fn get_declaration(&self, id: &Uuid) -> Option<DeclarationGeneric>;
+        // async fn receive_docs(&mut self, doc: Document) -> Result<(), Box<dyn Error>>;
+        /// Gives declaration reference with provided UUID, if there is any, and deletes it from
+        /// the pool
+        async fn remove_declaration(&mut self, id: &Uuid) -> Option<Declaration<Pending>>;
+    }
 
-            // Return taken option
-            self.processor_channel = ch;
-
-            Ok(res?)
-        }
-
-        async fn get_declaration(&self, id: Uuid) -> Option<&Declaration> {
-            stream::iter(&self.declarations)
-                .filter_map(async move |decl| {
-                    if decl.id().await == id {
-                        Some(decl)
-                    } else {
-                        None
-                    }
-                })
-                .collect::<Vec<&Declaration>>()
-                .await
-                .pop()
-        }
-
-        async fn update_decl(&mut self, decl: Declaration) -> Result<(), Box<dyn Error>> {
+    impl Logic for super::Customs {
+        async fn update_decl(
+            &mut self,
+            decl: Declaration<Pending>,
+        ) -> Result<Option<Declaration<Pending>>, Box<dyn Error>> {
             let id = decl.id().await;
-            for declar in &mut self.declarations {
-                if declar.id().await == id {
-                    *declar = decl;
-                    return Ok(());
-                }
+            tracing::info!("Updating declaration with id: {}", id);
+            let old_decl = self.declarations.insert(id, decl);
+            if old_decl.is_some() {
+                tracing::info!("Declaration with id: {} was updated", id);
+            } else {
+                tracing::info!("Declaration with id: {} was added", id);
             }
-            self.declarations.push(decl);
-            Ok(())
+
+            Ok(old_decl)
+        }
+
+        async fn get_declaration(&self, id: &Uuid) -> Option<DeclarationGeneric> {
+            if let Some(decl) = self.declarations.get(id) {
+                Some(DeclarationGeneric::Pending(decl.clone()))
+            } else {
+                tracing::warn!("No declaration with id: {}", id);
+                None
+            }
+        }
+
+        async fn remove_declaration(&mut self, id: &Uuid) -> Option<Declaration<Pending>> {
+            self.declarations.remove(id)
         }
     }
 }
 
 /// Boilerplate
-impl<'a> Customs<'a> {
+impl Customs {
     getter_ref!(
         { async } id: &Uuid,
-        { async } name: &str,
-        { async } competence: &str,
-        { async } phone_number: &str,
-        { async } email: &str,
-        { async } declarations: &[Declaration],
-        { async } processor_channel: &Option<Receiver<Declaration>>,
-        { async } inspectors: &[Inspector],
-        { async } operators: &[Operator]
+        { async } name: &Option<String>,
+        { async } competence: &Option<String>,
+        { async } phone_number: &Option<String>,
+        { async } email: &Option<String>,
+        { async } declarations: &HashMap<Uuid, Declaration<Pending>>,
+        { async } inspectors: &HashMap<Uuid, Inspector>,
+        { async } operators: &HashMap<Uuid, Operator>
     );
 
     setter!(
         { async } id: Uuid,
-        { async } name: &str,
-        { async } competence: &str,
-        { async } phone_number: &str,
-        { async } email: &str,
-        { async } declarations: Vec<Declaration>,
-        { async } inspectors: Vec<Inspector>,
-        { async } operators: Vec<Operator>
+        { async } name: Option<String>,
+        { async } competence: Option<String>,
+        { async } phone_number: Option<String>,
+        { async } email: Option<String>,
+        { async } declarations: HashMap<Uuid, Declaration<Pending>>,
+        { async } inspectors: HashMap<Uuid, Inspector>,
+        { async } operators: HashMap<Uuid, Operator>
     );
 
     getter_mut!(
-        { async } id: &mut Uuid,
-        { async } name: &mut String,
-        { async } competence: &mut String,
-        { async } phone_number: &mut String,
-        { async } email: &mut String,
-        { async } declarations: &mut [Declaration],
-        { async } processor_channel: &mut Option<Receiver<Declaration>>,
-        { async } inspectors: &mut [Inspector],
-        { async } operators: &mut [Operator]
+        { async } name: &mut Option<String>,
+        { async } competence: &mut Option<String>,
+        { async } phone_number: &mut Option<String>,
+        { async } email: &mut Option<String>,
+        { async } declarations: &mut HashMap<Uuid, Declaration<Pending>>,
+        { async } inspectors: &mut HashMap<Uuid, Inspector>,
+        { async } operators: &mut HashMap<Uuid, Operator>
     );
 
-    pub async fn processor_channel(&self) -> &Option<Receiver<Declaration>> {
-        &self.processor_channel
-    }
-
-    pub async fn set_processor_channel(&mut self, processor_channel: Receiver<Declaration>) {
-        self.processor_channel = Some(processor_channel);
-    }
+    getter!(
+        { async } id: Uuid,
+        { async } name: Option<String>,
+        { async } competence: Option<String>,
+        { async } phone_number: Option<String>,
+        { async } email: Option<String>
+    );
 }

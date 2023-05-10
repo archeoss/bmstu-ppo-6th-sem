@@ -12,7 +12,11 @@ pub struct Location {
 }
 
 impl Location {
-    pub async fn new(
+    pub async fn new(country: &str, region: &str, city: &str, timezone: DateTime<Utc>) -> Self {
+        Self::load(Uuid::new_v4(), country, region, city, timezone).await
+    }
+
+    pub async fn load(
         id: Uuid,
         country: &str,
         region: &str,
@@ -34,7 +38,7 @@ impl Location {
 /// We do this in order to if we want to turn current Structs
 /// into DTO Structs (or just strip it out of said logic).
 ///
-/// Import Logic: use <path>::<struct>::logic::*;
+/// Import Logic: ``use <path>::<struct>::logic::*;``
 ///
 mod logic {
     impl super::Location {}

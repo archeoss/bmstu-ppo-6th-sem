@@ -5,11 +5,14 @@ use uuid::Uuid;
 
 use crate::prelude::*;
 
-use super::declaration::Declaration;
+use super::declaration::{Declaration, DeclarationGeneric};
 use super::processor::Processor;
 
 pub trait Participant {
-    async fn fill_declaration(&mut self, declaration: &Declaration);
-    async fn get_declaration(&self, id: Uuid) -> Option<&Declaration>;
-    async fn send_docs(&self, proc: &Processor, id: Uuid) -> Result<(), Box<dyn Error>>;
+    async fn update_declaration(
+        &mut self,
+        declaration: &DeclarationGeneric,
+    ) -> Result<Option<DeclarationGeneric>, Box<dyn Error>>;
+    async fn get_declaration(&self, id: Uuid) -> Option<&DeclarationGeneric>;
+    async fn send_docs(&mut self, proc: &mut Processor, id: Uuid) -> Result<(), Box<dyn Error>>;
 }
