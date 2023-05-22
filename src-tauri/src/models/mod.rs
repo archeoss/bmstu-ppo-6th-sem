@@ -1,8 +1,8 @@
 use self::participants::declarant::logic::*;
 use self::participants::declarant::Declarant;
 
-mod customs;
-mod declaration;
-mod misc;
-mod participants;
-mod processor;
+pub mod customs;
+pub mod declaration;
+pub mod misc;
+pub mod participants;
+pub mod processor;

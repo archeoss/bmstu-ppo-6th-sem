@@ -1,0 +1,12 @@
+version: '3'
+
+services:
+  dispatcher:
+    image: surrealdb/surrealdb:latest
+    container_name: dispatcher_db
+    restart: always
+    command: start --user root --pass toor --log full file:/data/database.db
+    ports:
+      - 8000:8000
+    volumes:
+      - ./data:/data

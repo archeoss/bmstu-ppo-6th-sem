@@ -1,14 +1,14 @@
-#![feature(async_fn_in_trait, async_closure)]
+#![feature(async_fn_in_trait, async_closure, specialization)]
 // Let it be for now
 #![allow(dead_code)]
 #![allow(clippy::unused_async)]
 #![allow(clippy::needless_lifetimes)]
 
-mod errors;
-mod macros;
-mod models;
-mod repository;
-mod viewmodels;
+pub mod errors;
+pub mod macros;
+pub mod models;
+pub mod repository;
+pub mod viewmodels;
 
 pub mod prelude {
     pub use crate::errors::declaration::Err as DErr;

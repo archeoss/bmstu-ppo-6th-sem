@@ -46,7 +46,8 @@ mod logic {
 
 /// Boilerplate
 impl Location {
-    getter_ref!( { async } country: &str, { async } region: &str, { async } city: &str, { async } timezone: &DateTime<Utc>);
-    getter_mut!( { async } country: &mut String, { async } region: &mut String, { async } city: &mut String);
-    setter!(  { async } country: &str, { async } region: &str, { async } city: &str );
+    getter_ref!( { async } id: &Uuid, { async } country: &str, { async } region: &str, { async } city: &str, { async } timezone: &DateTime<Utc>);
+    getter_mut!( { async } id: &mut Uuid, { async } country: &mut String, { async } region: &mut String, { async } city: &mut String);
+    setter!( { async } id: Uuid, { async } country: &str, { async } region: &str, { async } city: &str );
+    getter!( { async } id: Uuid);
 }

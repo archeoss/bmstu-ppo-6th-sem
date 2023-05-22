@@ -4,6 +4,7 @@
 )]
 use opentelemetry::{global, sdk::trace::Tracer};
 use std::error::Error;
+
 use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt};
 #[allow(clippy::expect_used)]
 fn main() {

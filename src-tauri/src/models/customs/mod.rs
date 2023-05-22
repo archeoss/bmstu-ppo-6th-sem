@@ -11,8 +11,8 @@ use crate::prelude::*;
 use chrono::naive::NaiveTime;
 use tokio::sync::mpsc::Receiver;
 use uuid::Uuid;
-mod inspector;
-mod operator;
+pub mod inspector;
+pub mod operator;
 #[derive(Debug, PartialEq, Clone)]
 enum Fee {
     Percentage(f64),

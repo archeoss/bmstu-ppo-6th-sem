@@ -1,6 +1,6 @@
-mod client;
+pub mod client;
 pub mod declarant;
-mod representative;
+pub mod representative;
 use uuid::Uuid;
 
 use crate::prelude::*;

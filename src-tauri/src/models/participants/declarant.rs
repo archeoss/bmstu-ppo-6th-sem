@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, pin::Pin, todo};
 
 use uuid::Uuid;
 
@@ -10,8 +10,8 @@ use crate::{
     prelude::*,
 };
 
-use futures::stream;
 use futures::StreamExt;
+use futures::{stream, Future};
 
 use crate::errors::declaration::Err as DErr;
 use crate::models::participants::Participant;
@@ -151,7 +151,7 @@ pub mod logic {
 
 /// Boilerplate
 impl Declarant {
-    getter_ref!( { async } id: &Uuid, { async } name: &str, { async } declarations: &HashMap<Uuid, DeclarationGeneric>);
+    getter_ref!( { async } id: &Uuid, { async } name: &str, { async } declarations: &HashMap<Uuid, DeclarationGeneric>, { async } location: &Option<Location>);
     getter_mut!( { async } id: &mut Uuid, { async } name: &mut String, { async } declarations: &mut HashMap<Uuid, DeclarationGeneric>);
     setter!( { async } id: Uuid, { async } name: &str, { async } declarations: HashMap<Uuid, DeclarationGeneric>);
     getter!( { async } id: Uuid);

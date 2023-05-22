@@ -1,8 +1,11 @@
-mod repositories;
+use std::error::Error;
+use uuid::Uuid;
 
-trait Repository<T> {
-    async fn get(&self, id: i32) -> Option<T>;
-    async fn get_all(&self) -> Vec<T>;
-    async fn save(&self, entity: T) -> Result<(), String>;
-    async fn delete(&self, id: i32) -> Result<(), String>;
+mod surrealdb;
+// #[async_trait]
+pub trait Repository<E> {
+    async fn get(&self, id: Uuid) -> Result<E, Box<dyn Error>>;
+    async fn get_all(&self) -> Result<Vec<E>, Box<dyn Error>>;
+    async fn save(&self, entity: E, entry: &str) -> Result<(), Box<dyn Error>>;
+    async fn delete(&self, id: Uuid) -> Result<E, Box<dyn Error>>;
 }
