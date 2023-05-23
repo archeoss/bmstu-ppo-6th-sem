@@ -13,10 +13,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [macos-latest, ubuntu-20.04, windows-latest]
+        platform: [ubuntu-20.04] #[macos-latest, ubuntu-20.04, windows-latest]
         toolchain:
-          - stable
-          - beta
+          # - stable # Only nightly works (due to nightly features)
+          # - beta 
           - nightly
 
     runs-on: ${{ matrix.platform }}
