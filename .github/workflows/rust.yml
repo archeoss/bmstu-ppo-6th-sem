@@ -35,7 +35,7 @@ jobs:
       - name: install frontend dependencies
         run: yarn install 
       - name: Build the stack
-        run: docker-compose up -d
+        run: docker-compose -f src-tauri/docker-compose.yml up -d
       - uses: tauri-apps/tauri-action@v0.4.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
