@@ -182,8 +182,8 @@ mod tests {
             .save(customs.id().await, customs.clone())
             .await
             .unwrap();
-        let customs: Customs = dbg!(repository5.get(customs.id().await).await.unwrap());
-        assert_eq!(customs, customs);
+        let cust: Customs = dbg!(repository5.get(customs.id().await).await.unwrap());
+        assert_eq!(cust, customs);
 
         let mut location = Location::default();
         location.set_city("TestCity");
@@ -204,7 +204,7 @@ mod tests {
             .save(client.id().await, client.clone())
             .await
             .unwrap();
-        let client: client::Client = dbg!(repository8.get(client.id().await).await.unwrap());
-        assert_eq!(*client.name_ref().await, *client.name_ref().await);
+        let clnt: client::Client = dbg!(repository8.get(client.id().await).await.unwrap());
+        assert_eq!(*clnt.name_ref().await, *client.name_ref().await);
     }
 }
