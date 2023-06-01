@@ -2,12 +2,9 @@ use std::collections::HashMap;
 
 use uuid::Uuid;
 
-use crate::prelude::*;
+use crate::{prelude::*, utils::HasId};
 
-use super::{
-    customs::Customs,
-    declaration::{Declaration, Document},
-};
+use super::{customs::Customs, declaration::Declaration};
 
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct Processor {
@@ -72,7 +69,7 @@ pub mod logic {
             tracing::info!(
                 "Sending declaration {} to customs {}",
                 decl.id().await,
-                customs.id().await
+                customs.id()
             );
 
             customs.update_decl(decl.clone()).await

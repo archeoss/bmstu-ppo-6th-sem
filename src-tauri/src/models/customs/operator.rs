@@ -1,9 +1,10 @@
 use uuid::Uuid;
 
-use crate::prelude::*;
+use crate::{prelude::*, utils::HasId};
 
 #[derive(Clone, Eq, PartialEq, PartialOrd, Ord, Debug, Hash, Serialize, Deserialize)]
 pub struct Operator {
+    #[serde(skip)]
     id: Uuid,
     name: String,
     post: String,
@@ -45,4 +46,10 @@ impl Operator {
     getter_mut!( { async } id: &mut Uuid, { async } name: &mut String, { async } post: &mut String);
     setter!( { async } id: Uuid, { async } name: &str, { async } post: &str);
     getter!( { async } id: Uuid);
+}
+
+impl HasId for Operator {
+    fn id(&mut self) -> &mut Uuid {
+        &mut self.id
+    }
 }

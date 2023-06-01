@@ -1,19 +1,17 @@
-use std::{collections::HashMap, sync::RwLock};
+use std::collections::HashMap;
 
 use self::{inspector::Inspector, operator::Operator};
 
 use super::{
-    declaration::{Declaration, DeclarationGeneric, Pending},
+    declaration::{Declaration, Pending},
     misc::location::Location,
-    processor::Processor,
 };
-use crate::prelude::*;
+use crate::{prelude::*, utils::HasId};
 use chrono::naive::NaiveTime;
-use tokio::sync::mpsc::Receiver;
 use uuid::Uuid;
 pub mod inspector;
 pub mod operator;
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 enum Fee {
     Percentage(f64),
     Flat(f64),
@@ -45,7 +43,7 @@ impl Fee {
     }
 }
 
-#[derive(Default, Debug, PartialEq, Clone)]
+#[derive(Default, Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct CustomsParams {
     fee: Fee,
     banned_import_products: Vec<String>,
@@ -55,8 +53,9 @@ pub struct CustomsParams {
 }
 
 // #[derive(Clone, PartialEq, PartialOrd, Debug)]
-#[derive(Default, Debug, PartialEq, Clone)]
+#[derive(Default, Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct Customs {
+    #[serde(skip)]
     id: Uuid,
     work_hours: Option<(NaiveTime, NaiveTime)>,
     name: Option<String>,
@@ -196,4 +195,10 @@ impl Customs {
         { async } phone_number: Option<String>,
         { async } email: Option<String>
     );
+}
+
+impl HasId for Customs {
+    fn id(&mut self) -> &mut Uuid {
+        &mut self.id
+    }
 }

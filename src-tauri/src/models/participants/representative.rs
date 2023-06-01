@@ -8,12 +8,14 @@ use crate::{
         misc::location::Location,
     },
     prelude::*,
+    utils::HasId,
 };
 
 use super::client::Client;
 
 #[derive(Clone, Default, Debug, Serialize, Deserialize)]
 pub struct Representative {
+    #[serde(skip)]
     id: Uuid,
     name: String,
     location: Option<Location>,
@@ -284,4 +286,10 @@ pub enum Service {
     CustomsPaperwork,
     Consultation,
     Outsoure,
+}
+
+impl HasId for Representative {
+    fn id(&mut self) -> &mut Uuid {
+        &mut self.id
+    }
 }

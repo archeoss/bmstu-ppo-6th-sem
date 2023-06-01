@@ -1,29 +1,27 @@
-use std::{collections::HashMap, pin::Pin, todo};
+use std::collections::HashMap;
 
 use uuid::Uuid;
 
 use crate::{
-    models::{
-        declaration::{Approved, Declaration, DeclarationGeneric, Document, Draft, Rejected},
-        misc::location::Location,
-    },
+    models::{declaration::DeclarationGeneric, misc::location::Location},
     prelude::*,
+    utils::HasId,
 };
 
-use futures::StreamExt;
-use futures::{stream, Future};
-
 use crate::errors::declaration::Err as DErr;
-use crate::models::participants::Participant;
 use crate::models::processor::Processor;
 
 use super::*;
 
+// #[serde_as]
 #[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
 pub struct Declarant {
+    #[serde(skip)]
     id: Uuid,
     name: String,
     location: Option<Location>,
+    // #[serde(with = "Map<(String, DeclarationGeneric)>")]
+    // #[serde_as(as = "Vec<(_, _)>")]
     declarations: HashMap<Uuid, DeclarationGeneric>,
 }
 
@@ -338,5 +336,11 @@ mod tests {
                 .unwrap(),
             DeclarationGeneric::Pending(declaration.into())
         );
+    }
+}
+
+impl HasId for Declarant {
+    fn id(&mut self) -> &mut Uuid {
+        &mut self.id
     }
 }
