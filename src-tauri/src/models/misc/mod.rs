@@ -1,2 +1,2 @@
-pub(crate) mod location;
+pub mod location;
 use crate::prelude::*;

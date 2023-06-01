@@ -1,11 +1,9 @@
 //! Declaration, main transferable object in the system
 
-use std::any::TypeId;
-
 use chrono::Utc;
 use uuid::Uuid;
 
-use crate::prelude::*;
+use crate::{prelude::*, utils::HasId};
 
 /// Declaration States
 #[derive(Clone, Default, PartialEq, Eq, PartialOrd, Debug, Serialize, Deserialize)]
@@ -18,16 +16,25 @@ pub struct Inspecting;
 pub struct Approved;
 #[derive(Clone, Default, PartialEq, Eq, PartialOrd, Debug, Serialize, Deserialize)]
 pub struct Rejected;
+pub trait IsState {}
+impl IsState for Draft {}
+impl IsState for Pending {}
+impl IsState for Inspecting {}
+impl IsState for Approved {}
+impl IsState for Rejected {}
 
 pub enum Document {
     Declaration(Declaration),
     Billing(Billing),
     Tax(Tax),
 }
-
+use uuid::serde::compact;
 #[derive(Clone, Default, PartialEq, PartialOrd, Debug, Serialize, Deserialize)]
 pub struct Declaration<State = Draft> {
+    #[serde(skip)]
     id: Uuid,
+    // #[serde(rename = "signer")]
+    #[serde(with = "compact")]
     signed_by: Uuid,
     inspected_by: Option<Uuid>,
     product_name: String,
@@ -46,8 +53,11 @@ pub struct Declaration<State = Draft> {
     // implement Sync (and Send for that matter). Might be unsafe to transfer between threads?
     // Or might be a false negative.
     // fn() -> State is fine tho.
+    #[serde(skip)]
     state: std::marker::PhantomData<fn() -> State>,
+    #[serde(skip)]
     created_at: chrono::DateTime<Utc>,
+    #[serde(skip)]
     updated_at: chrono::DateTime<Utc>,
 }
 
@@ -60,11 +70,11 @@ pub enum DeclarationGeneric {
     Rejected(Declaration<Rejected>),
 }
 
-pub trait GenericDowncast<'a, T: 'a> {
-    fn downcast(&'a self) -> Option<&'a T>;
+pub trait GenericDowncast<'a, T: 'a + IsState> {
+    fn downcast(&'a self) -> Option<&'a Declaration<T>>;
 }
 
-impl GenericDowncast<'_, Declaration<Draft>> for DeclarationGeneric {
+impl GenericDowncast<'_, Draft> for DeclarationGeneric {
     fn downcast(&self) -> Option<&Declaration<Draft>> {
         match self {
             Self::Draft(decl) => Some(decl),
@@ -73,7 +83,7 @@ impl GenericDowncast<'_, Declaration<Draft>> for DeclarationGeneric {
     }
 }
 
-impl GenericDowncast<'_, Declaration<Pending>> for DeclarationGeneric {
+impl GenericDowncast<'_, Pending> for DeclarationGeneric {
     fn downcast(&self) -> Option<&Declaration<Pending>> {
         match self {
             Self::Pending(decl) => Some(decl),
@@ -82,7 +92,7 @@ impl GenericDowncast<'_, Declaration<Pending>> for DeclarationGeneric {
     }
 }
 
-impl GenericDowncast<'_, Declaration<Inspecting>> for DeclarationGeneric {
+impl GenericDowncast<'_, Inspecting> for DeclarationGeneric {
     fn downcast(&self) -> Option<&Declaration<Inspecting>> {
         match self {
             Self::Inspecting(decl) => Some(decl),
@@ -91,7 +101,7 @@ impl GenericDowncast<'_, Declaration<Inspecting>> for DeclarationGeneric {
     }
 }
 
-impl GenericDowncast<'_, Declaration<Approved>> for DeclarationGeneric {
+impl GenericDowncast<'_, Approved> for DeclarationGeneric {
     fn downcast(&self) -> Option<&Declaration<Approved>> {
         match self {
             Self::Approved(decl) => Some(decl),
@@ -100,7 +110,7 @@ impl GenericDowncast<'_, Declaration<Approved>> for DeclarationGeneric {
     }
 }
 
-impl GenericDowncast<'_, Declaration<Rejected>> for DeclarationGeneric {
+impl GenericDowncast<'_, Rejected> for DeclarationGeneric {
     fn downcast(&self) -> Option<&Declaration<Rejected>> {
         match self {
             Self::Rejected(decl) => Some(decl),
@@ -516,5 +526,11 @@ mod tests {
         let d_validated = d.validate().await;
         assert!(d_validated.is_ok());
         assert_eq!(d_pending, d_validated.unwrap());
+    }
+}
+
+impl<T> HasId for Declaration<T> {
+    fn id(&mut self) -> &mut Uuid {
+        &mut self.id
     }
 }

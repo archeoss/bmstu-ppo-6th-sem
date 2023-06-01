@@ -4,10 +4,12 @@ use uuid::Uuid;
 use crate::{
     models::declaration::{Declaration, Inspecting},
     prelude::*,
+    utils::HasId,
 };
 
 #[derive(Clone, Default, PartialEq, Debug, Serialize, Deserialize)]
 pub struct Inspector {
+    #[serde(skip)]
     id: Uuid,
     name: String,
     rank: String,
@@ -266,5 +268,10 @@ mod tests {
             .await;
         assert_eq!(tax.incorrect_fields().await, 2);
         assert!((tax.price().await - 20.0).abs() < f64::EPSILON);
+    }
+}
+impl HasId for Inspector {
+    fn id(&mut self) -> &mut Uuid {
+        &mut self.id
     }
 }

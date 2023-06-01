@@ -8,6 +8,7 @@ pub mod errors;
 pub mod macros;
 pub mod models;
 pub mod repository;
+mod utils;
 pub mod viewmodels;
 
 pub mod prelude {

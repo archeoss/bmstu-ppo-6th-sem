@@ -1,8 +1,9 @@
-use crate::prelude::*;
+use crate::{prelude::*, utils::HasId};
 use chrono::{DateTime, Utc};
 use uuid::Uuid;
 #[derive(Clone, Default, Eq, PartialEq, PartialOrd, Ord, Debug, Hash, Serialize, Deserialize)]
 pub struct Location {
+    #[serde(skip)]
     id: Uuid,
     country: String,
     region: String,
@@ -50,4 +51,10 @@ impl Location {
     getter_mut!( { async } id: &mut Uuid, { async } country: &mut String, { async } region: &mut String, { async } city: &mut String);
     setter!( { async } id: Uuid, { async } country: &str, { async } region: &str, { async } city: &str );
     getter!( { async } id: Uuid);
+}
+
+impl HasId for Location {
+    fn id(&mut self) -> &mut Uuid {
+        &mut self.id
+    }
 }

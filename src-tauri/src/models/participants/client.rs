@@ -5,11 +5,13 @@ use uuid::Uuid;
 use crate::{
     models::{declaration::Billing, misc::location::Location},
     prelude::*,
+    utils::HasId,
 };
 
 use super::representative::{Service, ServiceRequest};
-#[derive(Debug, Default)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct Client {
+    #[serde(skip)]
     id: Uuid,
     name: String,
     location: Option<Location>,
@@ -127,5 +129,11 @@ mod tests {
         let mut billing = Billing::new().await;
         client.receive_billing(billing).await.unwrap();
         assert_eq!(client.billings.len(), 1);
+    }
+}
+
+impl HasId for Client {
+    fn id(&mut self) -> &mut Uuid {
+        &mut self.id
     }
 }

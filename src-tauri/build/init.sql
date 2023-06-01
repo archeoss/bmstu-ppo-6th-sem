@@ -30,78 +30,78 @@ DEFINE SCOPE DispatcherScope
             SIGNIN ( SELECT * FROM user WHERE user = $user AND crypto::argon2::compare(pass, $pass) );
 
 
-DEFINE TABLE declaration SCHEMAFULL
+DEFINE TABLE declaration SCHEMALESS
             PERMISSIONS 
                 FOR select WHERE true, 
                 FOR create, delete, update WHERE id = $auth.id AND $auth.role containsany [role:declarant, role:client, role:representative, role:inspector];
 
-        DEFINE FIELD signed_by ON declaration TYPE record(representative, declarant);
-        DEFINE FIELD inspected_by ON declaration TYPE record(inspector);
-        DEFINE FIELD product_name ON declaration TYPE string;
-        DEFINE FIELD product_code ON declaration TYPE string;
-        DEFINE FIELD product_price ON declaration TYPE float
-            ASSERT $value >= 0;
-        DEFINE FIELD product_quantity ON declaration TYPE int
-            ASSERT $value > 0;
-        DEFINE FIELD product_weight ON declaration TYPE float
-            ASSERT $value > 0;
-        DEFINE FIELD product_description ON declaration TYPE string;
-        DEFINE FIELD transport_type ON declaration TYPE string;
-        DEFINE FIELD transport_name ON declaration TYPE string;
-        DEFINE FIELD sender_name ON declaration TYPE string;
-        DEFINE FIELD receiver_name ON declaration TYPE string;
-        DEFINE FIELD destination ON declaration TYPE string;
-        DEFINE FIELD departure ON declaration TYPE string;
-        DEFINE FIELD state ON declaration TYPE string;
-        DEFINE FIELD created_at ON declaration TYPE datetime;
-        DEFINE FIELD updated_at ON declaration TYPE datetime;
-        DEFINE INDEX idx_declaration ON declaration COLUMNS id UNIQUE;
+        -- DEFINE FIELD signed_by ON declaration TYPE record(representative, declarant);
+        -- DEFINE FIELD inspected_by ON declaration TYPE record(inspector);
+        -- DEFINE FIELD product_name ON declaration TYPE string;
+        -- DEFINE FIELD product_code ON declaration TYPE string;
+        -- DEFINE FIELD product_price ON declaration TYPE float
+        --     ASSERT $value >= 0;
+        -- DEFINE FIELD product_quantity ON declaration TYPE int
+        --     ASSERT $value > 0;
+        -- DEFINE FIELD product_weight ON declaration TYPE float
+        --     ASSERT $value > 0;
+        -- DEFINE FIELD product_description ON declaration TYPE string;
+        -- DEFINE FIELD transport_type ON declaration TYPE string;
+        -- DEFINE FIELD transport_name ON declaration TYPE string;
+        -- DEFINE FIELD sender_name ON declaration TYPE string;
+        -- DEFINE FIELD receiver_name ON declaration TYPE string;
+        -- DEFINE FIELD destination ON declaration TYPE string;
+        -- DEFINE FIELD departure ON declaration TYPE string;
+        -- DEFINE FIELD state ON declaration TYPE string;
+        -- DEFINE FIELD created_at ON declaration TYPE datetime;
+        -- DEFINE FIELD updated_at ON declaration TYPE datetime;
+        -- DEFINE INDEX idx_declaration ON declaration COLUMNS id UNIQUE;
 
-DEFINE TABLE customs SCHEMAFULL
+DEFINE TABLE customs SCHEMALESS
             PERMISSIONS
                 FOR select WHERE true,
                 FOR create, delete, update WHERE id = $auth.id AND $auth.role containsany [role:operator];
 
-        DEFINE FIELD work_hours ON customs TYPE array;
-        DEFINE FIELD location ON customs TYPE record(location);
-        DEFINE FIELD competence ON customs TYPE string;
-        DEFINE FIELD phone_number ON customs TYPE string;
-        DEFINE FIELD email ON customs TYPE string;
-        DEFINE FIELD declarations ON customs TYPE array;
-        DEFINE FIELD declarations.* ON customs TYPE record(declaration);
-        DEFINE FIELD inspectors ON customs TYPE array;
-        DEFINE FIELD operators ON customs TYPE array;
-        DEFINE FIELD customs_params ON customs TYPE object;
+        -- DEFINE FIELD work_hours ON customs TYPE array;
+        -- DEFINE FIELD location ON customs TYPE record(location);
+        -- DEFINE FIELD competence ON customs TYPE string;
+        -- DEFINE FIELD phone_number ON customs TYPE string;
+        -- DEFINE FIELD email ON customs TYPE string;
+        -- DEFINE FIELD declarations ON customs TYPE array;
+        -- DEFINE FIELD declarations.* ON customs TYPE record(declaration);
+        -- DEFINE FIELD inspectors ON customs TYPE array;
+        -- DEFINE FIELD operators ON customs TYPE array;
+        -- DEFINE FIELD customs_params ON customs TYPE object;
 
-DEFINE TABLE inspector SCHEMAFULL
+DEFINE TABLE inspector SCHEMALESS
             PERMISSIONS
                 FOR select WHERE true,
                 FOR create, delete, update WHERE id = $auth.id AND $auth.role containsany [role:inspector];
 
-        DEFINE FIELD name ON inspector TYPE string;
-        DEFINE FIELD rank ON inspector TYPE string;
-        DEFINE FIELD post ON inspector TYPE string;
-        DEFINE FIELD declarations ON inspector TYPE array;
-        DEFINE FIELD declarations.* ON inspector TYPE record(declaration);
+        -- DEFINE FIELD name ON inspector TYPE string;
+        -- DEFINE FIELD rank ON inspector TYPE string;
+        -- DEFINE FIELD post ON inspector TYPE string;
+        -- DEFINE FIELD declarations ON inspector TYPE array;
+        -- DEFINE FIELD declarations.* ON inspector TYPE record(declaration);
 
-DEFINE TABLE declarant SCHEMAFULL
+DEFINE TABLE declarant SCHEMALESS
             PERMISSIONS
                 FOR select WHERE true,
                 FOR create, delete, update WHERE id = $auth.id AND $auth.role containsany [role:declarant];
                 
-        DEFINE FIELD name ON declarant TYPE string;
+        -- DEFINE FIELD name ON declarant TYPE string;
         -- DEFINE FIELD location ON declarant TYPE record(location);
         -- DEFINE FIELD declarations ON declarant TYPE array;
         -- DEFINE FIELD declarations.* ON declarant TYPE record(declaration);
 
-DEFINE TABLE representative SCHEMAFULL
+DEFINE TABLE representative SCHEMALESS
             PERMISSIONS
                 FOR select WHERE true,
                 FOR create, delete, update WHERE id = $auth.id AND $auth.role containsany [role:representative];
                 
-        DEFINE FIELD name ON declarant TYPE string;
-        DEFINE FIELD location ON declarant TYPE record(location);
-        DEFINE FIELD declarations ON declarant TYPE array;
-        DEFINE FIELD declarations.* ON declarant TYPE record(declaration);
+        -- DEFINE FIELD name ON declarant TYPE string;
+        -- DEFINE FIELD location ON declarant TYPE record(location);
+        -- DEFINE FIELD declarations ON declarant TYPE array;
+        -- DEFINE FIELD declarations.* ON declarant TYPE record(declaration);
 
 
